@@ -21,8 +21,8 @@ Storyboard aprobado en `storyboard.md` (38 slides). Commits locales en `main` (r
 - [x] T3 S3,S4,S8 — 02 frontend React/pnpm + Dockerfile + nginx — inline — commit: "feat(fullstack): add React frontend"
 - [x] T4 S5 — compose.dev.yaml + compose.prod.yaml + README con comandos manuales — inline — commit: "feat(fullstack): add dev and prod compose"
 - [x] T5 S6 — render.yaml + guía de deploy — inline — commit: "feat(deploy): add Render blueprint"
-- [ ] T6 S7 — slides reveal.js — inline — commit:
-- [ ] T7 S1-S8 — verificación end-to-end (pnpm, uv, docker run, compose dev/prod) — inline
+- [x] T6 S7 — slides reveal.js — worker (QA visual) + inline — commit: "feat(slides): add reveal.js presentation"
+- [x] T7 S1-S8 — verificación end-to-end (pnpm, uv, docker run, compose dev/prod) — inline — ver L6
 
 ## Log
 
@@ -31,3 +31,5 @@ Storyboard aprobado en `storyboard.md` (38 slides). Commits locales en `main` (r
 - L3 Usuario: "me parece bien continuemos" — storyboard aprobado.
 - L4 Usuario: "si quieres ir guardando tu progreso puedes usar iniciar un repo y pushear a https://github.com/UNTDF-viera-projects/clase-docker-2026-10-22.git" — remoto configurado por SSH (HTTPS sin credenciales).
 - L5 Evidencia: imágenes simple v1/v2 278 MB, v3 63 MB; api 347 MB; prod web 63 MB. Puerto 8080 local ocupado por otro proyecto del usuario (sib-api-web-1): verificación prod con override 18080. Fix: ORDER BY unaccent(nombre).
+- L6 Evidencia T7: secuencia manual del README (red, volumen, db, api, web) OK; persistencia tras docker rm db = 24 filas; PORT=10000 (Render) OK en web y api; sin Docker uv+pnpm con proxy Vite OK; HMR en compose dev OK; compose prod healthy, SPA fallback 200, api/db sin puertos publicados. Render real no verificado (requiere cuenta del usuario).
+- L7 Slides: 39 slides (una extra: "Construir y conectar el backend"). Fix visual: estilos de tabla del tema se filtraban a la tabla de números de línea de highlight.js.

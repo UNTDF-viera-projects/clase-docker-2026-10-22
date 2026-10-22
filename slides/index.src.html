@@ -1,0 +1,882 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Introducción a Docker · UNTDF</title>
+    <link rel="stylesheet" href="vendor/reveal/reset.css" />
+    <link rel="stylesheet" href="vendor/reveal/reveal.css" />
+    <link rel="stylesheet" href="vendor/reveal/plugin/highlight/monokai.css" />
+    <link rel="stylesheet" href="untdf.css" />
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <!-- ================= BLOQUE 0 · APERTURA ================= -->
+        <section class="seccion" data-background-color="#BE1C1D" data-state="fondo-rojo" data-titulo="Apertura">
+          <div style="margin-top: 90px">
+            <img class="portada-logo" src="assets/logo-untdf-white.svg" alt="UNTDF" />
+            <h1 style="font-size: 2.6em">Docker</h1>
+            <h2 style="font-weight: 400">De “en mi máquina anda” a producción</h2>
+            <p style="margin-top: 2em; font-size: 0.8em">
+              Leonel Viera · Analista Universitario de Sistemas / Licenciatura en Sistemas<br />
+              Universidad Nacional de Tierra del Fuego, A. e I.A.S.
+            </p>
+          </div>
+          <aside class="notes">
+            Presentarse. Comentar que la clase es práctica: van a ver comandos y archivos reales que están en el
+            repositorio. Pedir que tengan Docker Desktop abierto si quieren seguirla.
+          </aside>
+        </section>
+
+        <section>
+          <h2>Hoja de ruta</h2>
+          <div class="ruta">
+            <div><b>1</b>El problema y qué es Docker<br /><small>10 min</small></div>
+            <div><b>2</b>Contenedor vs. máquina virtual<br /><small>7 min</small></div>
+            <div><b>3</b>Vocabulario y comandos<br /><small>15 min</small></div>
+            <div><b>4</b>Nuestro primer Dockerfile<br /><small>25 min</small></div>
+            <div><b>5</b>Fullstack armado a mano<br /><small>25 min</small></div>
+            <div><b>6</b>Docker Compose: dev y prod<br /><small>20 min</small></div>
+            <div><b>7</b>Deploy en Render<br /><small>12 min</small></div>
+            <div><b>8</b>Cierre<br /><small>3 min</small></div>
+          </div>
+          <p class="muted chico" style="margin-top: 1.2em">
+            Todo el código está en el repo: <code>01-capitales-simple/</code> y <code>02-capitales-fullstack/</code>
+          </p>
+        </section>
+
+        <!-- ================= BLOQUE 1 · EL PROBLEMA ================= -->
+        <section data-titulo="1 · El problema">
+          <h2>“En mi máquina anda” 🤷</h2>
+          <div class="dos-col">
+            <div class="tarjeta">
+              <h3>💻 Mi notebook</h3>
+              <ul>
+                <li>Node <strong>24</strong></li>
+                <li>Python <strong>3.14</strong></li>
+                <li>PostgreSQL <strong>18</strong></li>
+                <li>macOS</li>
+              </ul>
+            </div>
+            <div class="tarjeta gris">
+              <h3>🖥️ El servidor</h3>
+              <ul>
+                <li>Node <strong>18</strong></li>
+                <li>Python <strong>3.9</strong></li>
+                <li>PostgreSQL <strong>12</strong></li>
+                <li>Debian</li>
+              </ul>
+            </div>
+          </div>
+          <ul class="chico" style="margin-top: 0.8em">
+            <li class="fragment">Dependencias y versiones distintas en cada entorno (dev, test, prod).</li>
+            <li class="fragment">Sumar a alguien al equipo = un día instalando cosas.</li>
+            <li class="fragment">Dos proyectos que necesitan versiones incompatibles en la misma máquina.</li>
+          </ul>
+          <aside class="notes">Preguntar: ¿a quién le pasó que algo andaba en su máquina y no en la del compañero?</aside>
+        </section>
+
+        <section>
+          <h2>La idea: el contenedor de carga</h2>
+          <div class="flujo" style="font-size: 2.2em">
+            <span>📦🎹🍎🚗</span><span class="flecha">→</span><span>📦</span><span class="flecha">→</span
+            ><span>🚢 🚛 🚂 🏗️</span>
+          </div>
+          <p class="frase centro">
+            No importa <em>qué</em> lleva adentro:<br />
+            todos los barcos, camiones y grúas lo mueven <em>igual</em>.
+          </p>
+          <p class="centro muted chico fragment">
+            Docker hace lo mismo con el software: un formato estándar que cualquier máquina con Docker sabe ejecutar.
+          </p>
+        </section>
+
+        <section>
+          <h2>¿Qué es Docker?</h2>
+          <p class="frase" style="margin-top: 1em">
+            Una herramienta para <em>empaquetar</em> una aplicación con <em>todo</em> lo que necesita
+            (runtime, librerías, configuración) en una <em>imagen</em> que corre igual en cualquier lado.
+          </p>
+          <div class="tres-col" style="margin-top: 1.5em">
+            <div class="tarjeta fragment"><h3>Portable</h3>Corre igual en tu notebook, en el labo y en la nube.</div>
+            <div class="tarjeta fragment"><h3>Aislado</h3>Cada app con sus versiones, sin pisarse con otras.</div>
+            <div class="tarjeta fragment"><h3>Reproducible</h3>El entorno está escrito en un archivo y se versiona en git.</div>
+          </div>
+        </section>
+
+        <section>
+          <h2>De dónde viene y cómo funciona</h2>
+          <div class="timeline">
+            <div class="hito"><b>1979</b>chroot (Unix)</div>
+            <div class="hito"><b>2000</b>FreeBSD jails</div>
+            <div class="hito"><b>2008</b>LXC + cgroups (Linux)</div>
+            <div class="hito destacado"><b>2013</b>Docker (dotCloud)</div>
+            <div class="hito"><b>2015</b>OCI: estándar abierto</div>
+          </div>
+          <p class="chico">Docker no inventó los contenedores: los hizo <strong>fáciles de usar</strong>. Por debajo usa el kernel de Linux:</p>
+          <div class="tres-col">
+            <div class="tarjeta docker fragment"><h3>namespaces</h3>Aislamiento: cada contenedor ve sus propios procesos, red y archivos.</div>
+            <div class="tarjeta docker fragment"><h3>cgroups</h3>Límites: cuánta CPU y memoria puede usar.</div>
+            <div class="tarjeta docker fragment"><h3>capas (union FS)</h3>La imagen se arma en capas apiladas y reutilizables.</div>
+          </div>
+        </section>
+
+        <!-- ================= BLOQUE 2 · VM vs CONTENEDOR ================= -->
+        <section data-titulo="2 · Contenedor vs. VM">
+          <h2>Máquina virtual vs. contenedor</h2>
+          <div class="dos-col" style="gap: 2.5em">
+            <div>
+              <h3 class="centro">Máquinas virtuales</h3>
+              <div class="pila">
+                <div class="nivel hw">Hardware</div>
+                <div class="nivel">SO anfitrión</div>
+                <div class="nivel rojo">Hipervisor</div>
+                <div class="fila">
+                  <div class="apilado"><div class="nivel so">SO invitado</div><div class="nivel so">libs</div><div class="nivel app">App A</div></div>
+                  <div class="apilado"><div class="nivel so">SO invitado</div><div class="nivel so">libs</div><div class="nivel app">App B</div></div>
+                  <div class="apilado"><div class="nivel so">SO invitado</div><div class="nivel so">libs</div><div class="nivel app">App C</div></div>
+                </div>
+              </div>
+            </div>
+            <div class="fragment">
+              <h3 class="centro">Contenedores</h3>
+              <div class="pila">
+                <div class="nivel hw">Hardware</div>
+                <div class="nivel">SO anfitrión (un solo kernel)</div>
+                <div class="nivel motor">Docker Engine</div>
+                <div class="fila">
+                  <div class="apilado"><div class="nivel so">libs</div><div class="nivel app">App A</div></div>
+                  <div class="apilado"><div class="nivel so">libs</div><div class="nivel app">App B</div></div>
+                  <div class="apilado"><div class="nivel so">libs</div><div class="nivel app">App C</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="chico centro fragment" style="margin-top: 1em">
+            La VM virtualiza <strong>hardware</strong> y carga un SO entero. El contenedor solo aísla
+            <strong>procesos</strong> sobre el kernel que ya está.
+          </p>
+        </section>
+
+        <section>
+          <h2>Comparativa</h2>
+          <table>
+            <thead><tr><th></th><th>Máquina virtual</th><th>Contenedor</th></tr></thead>
+            <tbody>
+              <tr><td><b>Arranque</b></td><td>Minutos</td><td><strong>Segundos o menos</strong></td></tr>
+              <tr><td><b>Tamaño</b></td><td>GB (incluye un SO completo)</td><td><strong>MB</strong> (solo app + libs)</td></tr>
+              <tr><td><b>Kernel</b></td><td>Propio, cada VM el suyo</td><td>Compartido con el anfitrión</td></tr>
+              <tr><td><b>Aislamiento</b></td><td><strong>Fuerte</strong> (a nivel hardware)</td><td>A nivel de procesos</td></tr>
+              <tr><td><b>Densidad</b></td><td>Pocas por servidor</td><td><strong>Decenas o cientos</strong></td></tr>
+              <tr><td><b>Ideal para</b></td><td>Otro SO, aislamiento estricto</td><td>Empaquetar y desplegar aplicaciones</td></tr>
+            </tbody>
+          </table>
+          <p class="muted chico" style="margin-top: 1em">
+            ⚠️ En Mac y Windows, Docker Desktop corre una <b>VM Linux liviana</b> por debajo: no son tecnologías
+            excluyentes, se combinan.
+          </p>
+        </section>
+
+        <!-- ================= BLOQUE 3 · VOCABULARIO Y COMANDOS ================= -->
+        <section data-titulo="3 · Vocabulario y comandos">
+          <h2>Imagen, contenedor, registry</h2>
+          <div class="flujo">
+            <div class="caja">Dockerfile<small>la receta</small></div>
+            <div class="flecha">→<small>docker build</small></div>
+            <div class="caja roja">Imagen<small>plantilla inmutable</small></div>
+            <div class="flecha">→<small>docker run</small></div>
+            <div>
+              <div class="caja docker" style="margin-bottom: 6px">Contenedor 1</div>
+              <div class="caja docker" style="margin-bottom: 6px">Contenedor 2</div>
+              <div class="caja docker">Contenedor 3</div>
+            </div>
+          </div>
+          <div class="flujo fragment">
+            <div class="caja roja">Imagen</div>
+            <div class="flecha">⇄<small>push / pull</small></div>
+            <div class="caja punteada">Registry<small>Docker Hub, GHCR…</small></div>
+          </div>
+          <p class="centro fragment">
+            Imagen = <strong>clase</strong> · Contenedor = <strong>instancia</strong> (un proceso corriendo a partir de la imagen)
+          </p>
+        </section>
+
+        <section>
+          <h2 class="mano">Primer contacto</h2>
+          <div class="terminal">
+            <div class="barra"><i></i><i></i><i></i><span>terminal</span></div>
+            <div class="cuerpo"><div class="cmd">docker version</div><div class="salida">Client: … Server: Docker Engine …</div><div class="fragment"><div class="cmd">docker run hello-world</div><div class="salida">Unable to find image 'hello-world:latest' locally
+latest: Pulling from library/hello-world
+Status: Downloaded newer image for hello-world:latest
+
+Hello from Docker!
+This message shows that your installation appears to be working correctly.</div></div><div class="fragment"><div class="cmd">docker images</div><div class="salida">REPOSITORY    TAG       IMAGE ID       CREATED        SIZE
+hello-world   latest    …              …              ~10kB</div></div><div class="fragment"><div class="cmd">docker pull nginx:alpine</div><div class="comentario"># nombre:tag  → sin tag se usa "latest"</div></div></div>
+          </div>
+          <aside class="notes">
+            Qué pasó en hello-world: 1) el cliente le pidió al daemon correr la imagen, 2) no estaba local, la
+            bajó de Docker Hub (pull), 3) creó un contenedor, 4) lo ejecutó y mostró la salida. Ese contenedor
+            terminó, pero sigue existiendo: lo vemos con docker ps -a.
+          </aside>
+        </section>
+
+        <section data-sincronizar>
+          <h2>Anatomía de <code>docker run</code></h2>
+          <div class="comando">
+            <span class="p" data-id="run">docker run</span> <span class="p" data-id="d">-d</span>
+            <span class="p" data-id="p">-p 8080:80</span> <span class="p" data-id="name">--name web</span>
+            <span class="p" data-id="img">nginx:alpine</span>
+          </div>
+          <ul class="callouts">
+            <li class="fragment" data-n="1" data-marca="run">Crear y arrancar un contenedor nuevo.</li>
+            <li class="fragment" data-n="2" data-marca="d"><b>detached</b>: corre en segundo plano y nos devuelve la terminal.</li>
+            <li class="fragment" data-n="3" data-marca="p">Publicar puerto <b>host:contenedor</b>. El 8080 de tu máquina va al 80 del contenedor.</li>
+            <li class="fragment" data-n="4" data-marca="name">Nombre para referirnos a él (si no, Docker inventa uno).</li>
+            <li class="fragment" data-n="5" data-marca="img">Imagen a usar. Si no está local, la descarga.</li>
+          </ul>
+          <aside class="notes">Correrlo y abrir http://localhost:8080. Ojo: si el 8080 está ocupado aparece "port is already allocated": cambiar a -p 8081:80.</aside>
+        </section>
+
+        <section>
+          <h2 class="mano">Ciclo de vida de un contenedor</h2>
+          <div class="flujo">
+            <div class="caja">created</div><div class="flecha">→<small>start</small></div>
+            <div class="caja roja">running</div><div class="flecha">→<small>stop</small></div>
+            <div class="caja">exited</div><div class="flecha">→<small>rm</small></div>
+            <div class="caja punteada">eliminado</div>
+          </div>
+          <div class="terminal">
+            <div class="barra"><i></i><i></i><i></i><span>terminal</span></div>
+            <div class="cuerpo"><div class="cmd">docker ps                <span class="comentario"># contenedores corriendo (-a: también los detenidos)</span></div><div class="cmd fragment">docker logs -f web        <span class="comentario"># ver la salida (Ctrl+C para salir)</span></div><div class="cmd fragment">docker exec -it web sh    <span class="comentario"># abrir una shell ADENTRO del contenedor</span></div><div class="cmd fragment">docker stop web           <span class="comentario"># detener</span></div><div class="cmd fragment">docker start web          <span class="comentario"># volver a arrancar</span></div><div class="cmd fragment">docker rm -f web          <span class="comentario"># eliminar (-f: aunque esté corriendo)</span></div></div>
+          </div>
+          <aside class="notes">Dentro del exec: cat /etc/os-release (es Alpine aunque estemos en Mac/Windows), ls /usr/share/nginx/html.</aside>
+        </section>
+
+        <section>
+          <h2>Machete 📸</h2>
+          <div class="dos-col">
+            <table class="machete">
+              <tr><td>docker run</td><td>crear y arrancar un contenedor</td></tr>
+              <tr><td>docker ps -a</td><td>listar contenedores</td></tr>
+              <tr><td>docker logs -f</td><td>ver la salida</td></tr>
+              <tr><td>docker exec -it</td><td>ejecutar un comando adentro</td></tr>
+              <tr><td>docker stop / start</td><td>detener / arrancar</td></tr>
+              <tr><td>docker rm</td><td>eliminar contenedor</td></tr>
+            </table>
+            <table class="machete">
+              <tr><td>docker build -t</td><td>construir imagen</td></tr>
+              <tr><td>docker images</td><td>listar imágenes</td></tr>
+              <tr><td>docker pull / push</td><td>bajar / subir al registry</td></tr>
+              <tr><td>docker rmi</td><td>eliminar imagen</td></tr>
+              <tr><td>docker network</td><td>redes</td></tr>
+              <tr><td>docker volume</td><td>volúmenes</td></tr>
+            </table>
+          </div>
+          <p class="muted chico">Y para varios contenedores: <code>docker compose up / down / ps / logs</code></p>
+        </section>
+
+        <!-- ================= BLOQUE 4 · PRIMER DOCKERFILE ================= -->
+        <section class="seccion" data-background-color="#BE1C1D" data-state="fondo-rojo" data-titulo="4 · Primer Dockerfile">
+          <div style="margin-top: 40px">
+            <div class="numero">4</div>
+            <h1>Nuestro primer Dockerfile</h1>
+            <div class="dos-col">
+              <div>
+                <p>
+                  <code>01-capitales-simple/</code>: React + Vite que lista las 24 capitales con datos fijos en
+                  <code>src/capitales.js</code>.
+                </p>
+                <p>Sin Docker se corre con:<br /><code>pnpm install</code> y <code>pnpm dev</code></p>
+              </div>
+              <pre class="chico"><code class="plaintext" data-trim>01-capitales-simple/
+├── Dockerfile.v1      ← empezamos acá
+├── Dockerfile.v2
+├── Dockerfile         ← versión final
+├── .dockerignore
+├── package.json
+├── pnpm-lock.yaml
+├── index.html
+└── src/
+    ├── App.jsx
+    ├── capitales.js
+    └── main.jsx</code></pre>
+            </div>
+          </div>
+        </section>
+
+        <section data-sincronizar>
+          <h2>Dockerfile v1: la receta</h2>
+          <div class="anatomia">
+            <div>
+              <span class="archivo">01-capitales-simple/Dockerfile.v1</span>
+              <pre class="grande"><code class="dockerfile" data-line-numbers="1-15|2|4|6-7|9-10|12|14-15" data-incluir="01-capitales-simple/Dockerfile.v1"></code></pre>
+            </div>
+            <ul class="callouts">
+              <li data-step="1" data-n="1"><b>FROM</b>: imagen base. Node 24 sobre Alpine Linux.</li>
+              <li data-step="2" data-n="2"><b>WORKDIR</b>: carpeta de trabajo dentro de la imagen (la crea si no existe).</li>
+              <li data-step="3" data-n="3"><b>COPY</b>: de mi máquina (contexto de build) a la imagen.</li>
+              <li data-step="4" data-n="4"><b>RUN</b>: ejecuta un comando <em>al construir</em>. Su resultado queda guardado en la imagen.</li>
+              <li data-step="5" data-n="5"><b>EXPOSE</b>: documenta el puerto. <em>No</em> lo publica: eso lo hace <code>-p</code>.</li>
+              <li data-step="6" data-n="6"><b>CMD</b>: qué se ejecuta <em>al arrancar</em> el contenedor.</li>
+            </ul>
+          </div>
+        </section>
+
+        <section>
+          <h2 class="mano">Build &amp; run</h2>
+          <div class="terminal">
+            <div class="barra"><i></i><i></i><i></i><span>01-capitales-simple</span></div>
+            <div class="cuerpo"><div class="cmd">docker build -f Dockerfile.v1 -t capitales:v1 .</div><div class="comentario"># -f: qué Dockerfile · -t: nombre:tag · "." = contexto (la carpeta que se envía a Docker)</div><div class="salida"> => [1/4] FROM docker.io/library/node:24-alpine
+ => [2/4] WORKDIR /app
+ => [3/4] COPY . .
+ => [4/4] RUN corepack enable &amp;&amp; pnpm install --frozen-lockfile
+ => naming to docker.io/library/capitales:v1</div><div class="fragment"><div class="cmd">docker run --rm -p 5173:5173 capitales:v1</div><div class="comentario"># --rm: borrar el contenedor al detenerlo</div><div class="salida">  VITE ready
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: http://172.17.0.2:5173/</div></div></div>
+          </div>
+          <p class="chico fragment">
+            ¿Por qué <code>--host</code> en el CMD? Vite por defecto escucha solo en el <code>localhost</code>
+            <strong>del contenedor</strong>, y desde afuera no se llega. Con <code>--host</code> escucha en todas las interfaces.
+          </p>
+          <aside class="notes">Probar sacando --host del Dockerfile: el contenedor arranca pero el navegador no conecta. Buen momento para que vean el error.</aside>
+        </section>
+
+        <section>
+          <h2>Cada instrucción es una capa</h2>
+          <div class="dos-col">
+            <div>
+              <div class="terminal">
+                <div class="barra"><i></i><i></i><i></i><span>terminal</span></div>
+                <div class="cuerpo"><div class="cmd">docker history capitales:v1</div><div class="salida">CREATED BY                          SIZE
+CMD ["pnpm" "dev" "--host"]         0B
+EXPOSE [5173/tcp]                   0B
+RUN corepack enable &amp;&amp; pnpm insta…  111MB
+COPY . . # buildkit                 23.2kB
+WORKDIR /app                        0B
+… 8 capas más de node:24-alpine …   (~167MB)</div></div>
+              </div>
+              <p class="chico">Las capas se <strong>cachean</strong>. Si una cambia, se rehacen ella y <strong>todas las de arriba</strong>.</p>
+            </div>
+            <div class="capas" style="margin-top: 0.6em">
+              <div class="cache">FROM node:24-alpine ✔ cache</div>
+              <div class="cache">WORKDIR /app ✔ cache</div>
+              <div class="rota fragment" data-fragment-index="1">COPY . . ✘ cambió App.jsx</div>
+              <div class="rota fragment" data-fragment-index="1">RUN pnpm install ✘ se rehace (¡lento!)</div>
+              <div class="rota fragment" data-fragment-index="1">EXPOSE / CMD ✘</div>
+            </div>
+          </div>
+        </section>
+
+        <section data-sincronizar>
+          <h2 class="mano">Experimento: cambiar una capital</h2>
+          <div class="anatomia">
+            <div>
+              <span class="archivo">01-capitales-simple/Dockerfile.v2</span>
+              <pre><code class="dockerfile" data-line-numbers="1-19|8-9|11-12|14-15" data-incluir="01-capitales-simple/Dockerfile.v2"></code></pre>
+            </div>
+            <div>
+              <ul class="callouts">
+                <li data-step="1" data-n="1">Primero solo <code>package.json</code> y el lockfile: cambian poco.</li>
+                <li data-step="2" data-n="2">La instalación queda en cache mientras no cambien las dependencias.</li>
+                <li data-step="3" data-n="3">El código va al final: si cambia, solo se rehace esta capa.</li>
+              </ul>
+              <span class="archivo">.dockerignore</span>
+              <pre><code class="plaintext" data-incluir="01-capitales-simple/.dockerignore"></code></pre>
+            </div>
+          </div>
+          <aside class="notes">
+            1) Cambiar "Versión 1" en src/App.jsx y reconstruir v1: pnpm install se repite.
+            2) Reconstruir v2 dos veces cambiando App.jsx: el install dice CACHED.
+            3) .dockerignore: sin él, node_modules local (de macOS/Windows) entra al contexto y lo pisa.
+          </aside>
+        </section>
+
+        <section data-sincronizar>
+          <h2>Multi-stage: construir con Node, servir con nginx</h2>
+          <div class="anatomia">
+            <div>
+              <span class="archivo">01-capitales-simple/Dockerfile</span>
+              <pre><code class="dockerfile" data-line-numbers="1-24|3-15|14-15|17-24|21" data-incluir="01-capitales-simple/Dockerfile"></code></pre>
+            </div>
+            <ul class="callouts">
+              <li data-step="1" data-n="1">Etapa <b>build</b>: tiene Node, pnpm y todas las dependencias.</li>
+              <li data-step="2" data-n="2"><code>pnpm build</code> genera HTML, JS y CSS estáticos en <code>/app/dist</code>.</li>
+              <li data-step="3" data-n="3">Etapa <b>runtime</b>: arranca de cero desde <code>nginx:alpine</code>.</li>
+              <li data-step="4" data-n="4"><code>COPY --from=build</code>: se trae <em>solo</em> el resultado. Node y <code>node_modules</code> quedan afuera.</li>
+            </ul>
+          </div>
+        </section>
+
+        <section>
+          <h2 class="mano">Comparar</h2>
+          <div class="terminal">
+            <div class="barra"><i></i><i></i><i></i><span>01-capitales-simple</span></div>
+            <div class="cuerpo"><div class="cmd">docker build -t capitales:v3 .</div><div class="cmd">docker run --rm -p 8080:80 capitales:v3</div><div class="cmd">docker images capitales</div></div>
+          </div>
+          <div class="barra-tam"><span class="etq">v1</span><div class="b" style="width: 75%"></div><b>278 MB</b></div>
+          <div class="barra-tam"><span class="etq">v2</span><div class="b" style="width: 75%"></div><b>278 MB</b></div>
+          <div class="barra-tam fragment"><span class="etq">v3</span><div class="b roja" style="width: 17%"></div><b>63 MB</b></div>
+          <ul class="chico fragment">
+            <li>v1/v2 corren el <b>servidor de desarrollo</b> de Vite: útil para programar, no para producción.</li>
+            <li>v3 sirve <b>archivos estáticos optimizados</b> con nginx: menos peso, menos superficie de ataque, arranque instantáneo.</li>
+          </ul>
+        </section>
+
+        <!-- ================= BLOQUE 5 · FULLSTACK A MANO ================= -->
+        <section class="seccion" data-background-color="#BE1C1D" data-state="fondo-rojo" data-titulo="5 · Fullstack a mano">
+          <div style="margin-top: 60px">
+            <div class="numero">5</div>
+            <h1>Varios contenedores que se hablan</h1>
+            <div class="flujo" style="margin-top: 1.5em">
+              <div class="caja">🌐 Navegador</div>
+              <div class="flecha" style="color: #fff">→</div>
+              <div class="caja">web<small>React · Vite / nginx</small></div>
+              <div class="flecha" style="color: #fff">→<small>/api</small></div>
+              <div class="caja">api<small>FastAPI · :8000</small></div>
+              <div class="flecha" style="color: #fff">→</div>
+              <div class="caja">db<small>PostgreSQL · :5432</small></div>
+            </div>
+            <p><code>02-capitales-fullstack/</code> · <code>GET /capitales?page=1&amp;nombre=san</code> → 5 resultados por página</p>
+          </div>
+        </section>
+
+        <section>
+          <h2>Sin Docker…</h2>
+          <div class="dos-col">
+            <div class="terminal">
+              <div class="barra"><i></i><i></i><i></i><span>backend</span></div>
+              <div class="cuerpo"><div class="cmd">uv sync</div><div class="cmd">uv run fastapi dev app/main.py</div><div class="salida">Serving at: http://127.0.0.1:8000
+API docs:   http://127.0.0.1:8000/docs</div></div>
+            </div>
+            <div class="terminal">
+              <div class="barra"><i></i><i></i><i></i><span>frontend</span></div>
+              <div class="cuerpo"><div class="cmd">pnpm install</div><div class="cmd">pnpm dev</div><div class="salida">➜  Local: http://localhost:5173/</div></div>
+            </div>
+          </div>
+          <div class="fragment">
+            <p><strong>¿Y la base de datos?</strong></p>
+            <ul class="chico">
+              <li>Instalar PostgreSQL (¿qué versión? ¿la misma que en el servidor?).</li>
+              <li>Crear usuario, contraseña y base; correr <code>init.sql</code>.</li>
+              <li>Instalar Python, uv, Node y pnpm en las versiones correctas…</li>
+              <li>…y repetir todo en cada máquina del equipo. 😩</li>
+            </ul>
+          </div>
+        </section>
+
+        <section>
+          <h2 class="mano">Redes: los contenedores se encuentran por nombre</h2>
+          <div class="terminal">
+            <div class="barra"><i></i><i></i><i></i><span>02-capitales-fullstack</span></div>
+            <div class="cuerpo"><div class="cmd">docker network create capitales-net</div><div class="cmd">docker network ls</div></div>
+          </div>
+          <div class="flujo" style="margin-top: 1em">
+            <div class="caja punteada" style="padding: 1em 1.5em">
+              red <b>capitales-net</b>
+              <div class="flujo" style="margin: 0.6em 0 0">
+                <div class="caja docker">web</div><div class="flecha">→<small>http://api:8000</small></div>
+                <div class="caja docker">api</div><div class="flecha">→<small>db:5432</small></div>
+                <div class="caja docker">db</div>
+              </div>
+            </div>
+          </div>
+          <p class="chico">
+            En una red creada por nosotros, Docker tiene un <strong>DNS interno</strong>: el nombre del contenedor
+            funciona como hostname. Por eso la API se conecta a <code>db</code> y no a una IP.
+          </p>
+        </section>
+
+        <section>
+          <h2 class="mano">Volúmenes: que los datos sobrevivan</h2>
+          <div class="dos-col">
+            <div>
+              <p class="chico">El sistema de archivos de un contenedor es <strong>descartable</strong>: <code>docker rm</code> y se pierde todo.</p>
+              <div class="terminal">
+                <div class="barra"><i></i><i></i><i></i><span>terminal</span></div>
+                <div class="cuerpo"><div class="cmd">docker volume create pgdata</div><div class="cmd">docker volume ls</div></div>
+              </div>
+            </div>
+            <table>
+              <thead><tr><th></th><th>Volumen con nombre</th><th>Bind mount</th></tr></thead>
+              <tbody>
+                <tr><td>Sintaxis</td><td><code>-v pgdata:/ruta</code></td><td><code>-v ./carpeta:/ruta</code></td></tr>
+                <tr><td>Dónde vive</td><td>Lo administra Docker</td><td>Una carpeta de tu máquina</td></tr>
+                <tr><td>Uso típico</td><td><b>Datos</b> (bases de datos)</td><td><b>Código</b> en desarrollo, configs</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section data-sincronizar>
+          <h2 class="mano">La base de datos</h2>
+          <div class="comando chico" style="white-space: pre"><span class="p" data-id="n">docker run -d --name db --network capitales-net</span> \
+  <span class="p" data-id="e">-e POSTGRES_USER=capitales -e POSTGRES_PASSWORD=capitales -e POSTGRES_DB=capitales</span> \
+  <span class="p" data-id="v">-v pgdata:/var/lib/postgresql</span> \
+  <span class="p" data-id="b">-v "$(pwd)"/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro</span> \
+  <span class="p" data-id="i">postgres:18-alpine</span></div>
+          <ul class="callouts">
+            <li class="fragment" data-n="1" data-marca="n">Nombre <code>db</code> (será su hostname) y conectado a nuestra red.</li>
+            <li class="fragment" data-n="2" data-marca="e"><b>Variables de entorno</b>: así se configura la imagen oficial de Postgres.</li>
+            <li class="fragment" data-n="3" data-marca="v"><b>Volumen</b> con nombre para los datos.</li>
+            <li class="fragment" data-n="4" data-marca="b"><b>Bind mount</b> del script: todo lo que esté en <code>/docker-entrypoint-initdb.d/</code> se ejecuta la primera vez.</li>
+            <li class="fragment" data-n="5" data-marca="i">Imagen oficial, versión fija (no <code>latest</code>).</li>
+          </ul>
+          <div class="terminal fragment">
+            <div class="cuerpo"><div class="cmd">docker exec -it db psql -U capitales -c "SELECT * FROM capitales LIMIT 5;"</div></div>
+          </div>
+          <aside class="notes">En PowerShell usar ${PWD} en lugar de $(pwd). Mostrar que si hacemos docker rm -f db y lo volvemos a crear con el mismo volumen, los datos siguen.</aside>
+        </section>
+
+        <section data-sincronizar>
+          <h2>El backend: FastAPI + uv</h2>
+          <div class="anatomia">
+            <div>
+              <span class="archivo">02-capitales-fullstack/backend/Dockerfile</span>
+              <pre class="chico"><code class="dockerfile" data-line-numbers="1-28|2|4-5|9-11|13-14|18-22|24-28" data-incluir="02-capitales-fullstack/backend/Dockerfile"></code></pre>
+            </div>
+            <ul class="callouts">
+              <li data-step="1" data-n="1">Imagen base oficial de Python, variante <b>slim</b>.</li>
+              <li data-step="2" data-n="2">Copiamos el binario de <b>uv</b> desde otra imagen: no hace falta instalarlo.</li>
+              <li data-step="3" data-n="3">Mismo truco de cache: primero <code>pyproject.toml</code> + <code>uv.lock</code>, después <code>uv sync</code>.</li>
+              <li data-step="4" data-n="4"><b>ENV</b>: variables de entorno de la imagen. El venv queda en el PATH.</li>
+              <li data-step="5" data-n="5">Etapa <b>dev</b>: <code>fastapi dev</code> con recarga automática.</li>
+              <li data-step="6" data-n="6">Etapa <b>runtime</b> (la última = la que se construye por defecto). Usa <code>$PORT</code> si existe.</li>
+            </ul>
+          </div>
+        </section>
+
+        <section>
+          <h2 class="mano">Construir y conectar el backend</h2>
+          <div class="terminal">
+            <div class="barra"><i></i><i></i><i></i><span>02-capitales-fullstack</span></div>
+            <div class="cuerpo"><div class="cmd">docker build -t capitales-api ./backend</div><div class="cmd">docker run -d --name api --network capitales-net -p 8000:8000 \
+  -e DATABASE_URL=postgresql://capitales:capitales@<b class="c1">db</b>:5432/capitales \
+  capitales-api</div><div class="fragment"><div class="cmd">curl "localhost:8000/capitales?page=2"</div><div class="salida">{"items":[{"id":12,"nombre":"La Rioja","provincia":"La Rioja"},
+          {"id":13,"nombre":"Mendoza","provincia":"Mendoza"}, …],
+ "page":2,"page_size":5,"total":24,"total_pages":5}</div></div><div class="fragment"><div class="cmd">curl "localhost:8000/capitales?nombre=neuquen"</div><div class="salida">{"items":[{"id":15,"nombre":"Neuquén","provincia":"Neuquén"}],"page":1,…,"total":1}</div></div></div>
+          </div>
+          <p class="chico">La configuración entra por <strong>variable de entorno</strong>: la misma imagen sirve para cualquier base. También está la documentación en <code>localhost:8000/docs</code>.</p>
+        </section>
+
+        <section data-sincronizar>
+          <h2>El frontend: Vite + nginx como proxy</h2>
+          <div class="anatomia mitad">
+            <div>
+              <span class="archivo">frontend/Dockerfile</span>
+              <pre class="chico"><code class="dockerfile" data-line-numbers="1-25|9-12|14-16|18-25|20|23-24" data-incluir="02-capitales-fullstack/frontend/Dockerfile"></code></pre>
+              <ul class="callouts">
+                <li data-step="1" data-n="1">Etapa <b>dev</b>: servidor de Vite.</li>
+                <li data-step="2" data-n="2">Etapa <b>build</b>: genera los estáticos.</li>
+                <li data-step="3" data-n="3">Etapa <b>runtime</b>: nginx.</li>
+                <li data-step="4" data-n="4">Template de config de nginx…</li>
+                <li data-step="5" data-n="5">…con valores por defecto, cambiables con <code>-e</code>.</li>
+              </ul>
+            </div>
+            <div>
+              <span class="archivo">frontend/nginx/default.conf.template</span>
+              <pre class="chico"><code class="nginx" data-line-numbers="1-19|10-13" data-incluir="02-capitales-fullstack/frontend/nginx/default.conf.template"></code></pre>
+              <div class="terminal">
+                <div class="cuerpo"><div class="cmd">docker build -t capitales-web ./frontend</div><div class="cmd">docker run -d --name web --network capitales-net \
+  -p 8080:80 capitales-web</div></div>
+              </div>
+            </div>
+          </div>
+          <aside class="notes">Abrir http://localhost:8080, buscar "san", paginar. El navegador solo habla con nginx; nginx habla con la API por la red interna.</aside>
+        </section>
+
+        <section>
+          <h2>¿Cuántos comandos tipeamos? 😮‍💨</h2>
+          <div class="terminal">
+            <div class="cuerpo"><div class="cmd">docker network create capitales-net</div><div class="cmd">docker volume create pgdata</div><div class="cmd">docker run -d --name db --network capitales-net -e POSTGRES_USER=… -e POSTGRES_PASSWORD=… -e POSTGRES_DB=… -v pgdata:/var/lib/postgresql -v "$(pwd)"/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro postgres:18-alpine</div><div class="cmd">docker build -t capitales-api ./backend</div><div class="cmd">docker run -d --name api --network capitales-net -p 8000:8000 -e DATABASE_URL=… capitales-api</div><div class="cmd">docker build -t capitales-web ./frontend</div><div class="cmd">docker run -d --name web --network capitales-net -p 8080:80 capitales-web</div><div class="comentario"># …y para limpiar: docker rm -f web api db · docker network rm … · docker volume rm …</div></div>
+          </div>
+          <ul class="chico">
+            <li class="fragment">Hay que recordar el <strong>orden</strong>, los nombres y cada flag.</li>
+            <li class="fragment">No queda <strong>escrito</strong> en ningún lado (salvo un README que se desactualiza).</li>
+            <li class="fragment frase" style="font-size: 1.3em">Tiene que haber algo mejor… → <em>Docker Compose</em></li>
+          </ul>
+        </section>
+
+        <!-- ================= BLOQUE 6 · COMPOSE ================= -->
+        <section data-titulo="6 · Docker Compose">
+          <h2>De <code>docker run</code> a Compose: traducción 1:1</h2>
+          <div class="dos-col">
+            <div>
+              <h3>Comando</h3>
+              <div class="comando chico" style="white-space: pre">docker run -d <span class="c1">--name db</span> \
+  <span class="c2">-e POSTGRES_USER=capitales</span> \
+  <span class="c2">-e POSTGRES_PASSWORD=capitales</span> \
+  <span class="c2">-e POSTGRES_DB=capitales</span> \
+  <span class="c3">-p 5432:5432</span> \
+  <span class="c4">-v pgdata:/var/lib/postgresql</span> \
+  <span class="c4">-v ./db/init.sql:/docker-…/init.sql:ro</span> \
+  <span class="c5">postgres:18-alpine</span></div>
+              <p class="chico">La red no aparece: Compose crea <strong>una red por proyecto</strong> y conecta todos los servicios.</p>
+            </div>
+            <div>
+              <h3>compose.dev.yaml</h3>
+              <div class="comando chico" style="white-space: pre">services:
+  <span class="c1">db:</span>
+    <span class="c5">image: postgres:18-alpine</span>
+    <span class="c2">environment:</span>
+      <span class="c2">POSTGRES_USER: capitales</span>
+      <span class="c2">POSTGRES_PASSWORD: capitales</span>
+      <span class="c2">POSTGRES_DB: capitales</span>
+    <span class="c3">ports:</span>
+      <span class="c3">- "5432:5432"</span>
+    <span class="c4">volumes:</span>
+      <span class="c4">- pgdata:/var/lib/postgresql</span>
+      <span class="c4">- ./db/init.sql:/docker-…/init.sql:ro</span>
+
+volumes:
+  pgdata:</div>
+            </div>
+          </div>
+        </section>
+
+        <section data-sincronizar>
+          <h2>compose.dev.yaml</h2>
+          <div class="anatomia">
+            <div>
+              <span class="archivo">02-capitales-fullstack/compose.dev.yaml</span>
+              <pre class="chico"><code class="yaml" data-line-numbers="1-47|4|6-17|19-22|23-24|27-28|29-30|40-42|46-47" data-incluir="02-capitales-fullstack/compose.dev.yaml"></code></pre>
+            </div>
+            <ul class="callouts">
+              <li data-step="1" data-n="1"><b>name</b>: prefijo de contenedores, red y volúmenes.</li>
+              <li data-step="2" data-n="2">Servicio <b>db</b>: el mismo <code>docker run</code> de antes.</li>
+              <li data-step="3" data-n="3"><b>build</b> en vez de <b>image</b>: construye desde el Dockerfile, etapa <code>dev</code>.</li>
+              <li data-step="4" data-n="4">El host <code>db</code> = nombre del servicio.</li>
+              <li data-step="5" data-n="5"><b>Bind mount</b> del código → recarga en caliente.</li>
+              <li data-step="6" data-n="6"><b>depends_on</b>: orden de arranque.</li>
+              <li data-step="7" data-n="7">Volumen anónimo para no pisar los <code>node_modules</code> de Linux.</li>
+              <li data-step="8" data-n="8">Declaración del volumen con nombre.</li>
+            </ul>
+          </div>
+        </section>
+
+        <section>
+          <h2 class="mano">Un comando para todo</h2>
+          <div class="terminal">
+            <div class="barra"><i></i><i></i><i></i><span>02-capitales-fullstack</span></div>
+            <div class="cuerpo"><div class="cmd">docker compose -f compose.dev.yaml up --build</div><div class="salida"> ✔ Network capitales-dev_default     Created
+ ✔ Volume capitales-dev_pgdata       Created
+ ✔ Container capitales-dev-db-1      Started
+ ✔ Container capitales-dev-api-1     Started
+ ✔ Container capitales-dev-web-1     Started</div><div class="fragment"><div class="cmd">docker compose -f compose.dev.yaml ps</div><div class="cmd">docker compose -f compose.dev.yaml logs -f api</div></div><div class="fragment"><div class="comentario"># editar backend/app/main.py o frontend/src/App.jsx → se recarga solo, sin rebuild</div></div><div class="fragment"><div class="cmd">docker compose -f compose.dev.yaml down       <span class="comentario"># borra contenedores y red</span></div><div class="cmd">docker compose -f compose.dev.yaml down -v    <span class="comentario"># …y también los volúmenes (¡los datos!)</span></div></div></div>
+          </div>
+          <p class="chico">web <code>localhost:5173</code> · api <code>localhost:8000/docs</code> · db <code>localhost:5432</code></p>
+          <aside class="notes">Hot reload en vivo: cambiar el título del h1 en App.jsx y el mensaje de /health en main.py.</aside>
+        </section>
+
+        <section>
+          <h2>Desarrollo ≠ Producción</h2>
+          <table>
+            <thead><tr><th></th><th>compose.dev.yaml</th><th>compose.prod.yaml</th></tr></thead>
+            <tbody>
+              <tr><td><b>Código</b></td><td>Montado desde el host (bind mount)</td><td>Copiado <strong>dentro</strong> de la imagen: inmutable</td></tr>
+              <tr><td><b>Frontend</b></td><td>Servidor de Vite</td><td>nginx con estáticos + proxy <code>/api</code></td></tr>
+              <tr><td><b>Backend</b></td><td><code>fastapi dev</code> (recarga)</td><td><code>fastapi run</code></td></tr>
+              <tr><td><b>Puertos</b></td><td>Todos expuestos</td><td>Solo nginx (<code>8080</code>)</td></tr>
+              <tr><td><b>Secretos</b></td><td>Escritos en el YAML</td><td>En un <code>.env</code> que no va a git</td></tr>
+              <tr><td><b>Salud</b></td><td>—</td><td><code>healthcheck</code> + <code>restart</code></td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section data-sincronizar>
+          <h2>compose.prod.yaml</h2>
+          <div class="anatomia">
+            <div>
+              <span class="archivo">02-capitales-fullstack/compose.prod.yaml</span>
+              <pre class="chico"><code class="yaml" data-line-numbers="1-56|10-13|17|18-22|23|26-28|31|37-39|48-49" data-incluir="02-capitales-fullstack/compose.prod.yaml"></code></pre>
+            </div>
+            <ul class="callouts">
+              <li data-step="1" data-n="1">Valores desde <code>.env</code>; <code>:?</code> corta con error si faltan.</li>
+              <li data-step="2" data-n="2">La base <b>no publica puertos</b>.</li>
+              <li data-step="3" data-n="3"><b>healthcheck</b>: cómo sabe Docker que está lista.</li>
+              <li data-step="4" data-n="4"><b>restart</b>: si se cae, vuelve a arrancar.</li>
+              <li data-step="5" data-n="5"><b>target: runtime</b>: la etapa de producción.</li>
+              <li data-step="6" data-n="6">La API tampoco se expone: solo vía nginx.</li>
+              <li data-step="7" data-n="7">Esperar a que la base esté <em>sana</em>, no solo iniciada.</li>
+              <li data-step="8" data-n="8">Único puerto publicado.</li>
+            </ul>
+          </div>
+          <aside class="notes">cp .env.example .env · docker compose -f compose.prod.yaml up --build -d · docker compose -f compose.prod.yaml ps (columna STATUS con "healthy").</aside>
+        </section>
+
+        <section>
+          <h2>Trampa clásica: variables de Vite</h2>
+          <div class="dos-col">
+            <div class="tarjeta">
+              <h3>⏱️ Tiempo de build</h3>
+              <p class="chico"><code>pnpm build</code> reemplaza <code>import.meta.env.VITE_API_URL</code> por su valor <b>en el JS generado</b>.</p>
+              <p class="chico">Cambiar la variable al hacer <code>docker run</code> <strong>no tiene efecto</strong>: el valor quedó congelado en la imagen.</p>
+            </div>
+            <div class="tarjeta docker">
+              <h3>▶️ Tiempo de ejecución</h3>
+              <p class="chico">El frontend siempre llama a <code>/api/…</code> (misma URL que la página).</p>
+              <p class="chico">nginx lee <code>API_URL</code> <b>al arrancar</b> y reenvía. La misma imagen sirve en Compose (<code>http://api:8000</code>) y en Render (URL pública).</p>
+            </div>
+          </div>
+          <div class="flujo fragment">
+            <div class="caja">Navegador<small>fetch("/api/capitales")</small></div>
+            <div class="flecha">→</div>
+            <div class="caja roja">nginx<small>proxy_pass ${API_URL}</small></div>
+            <div class="flecha">→</div>
+            <div class="caja">FastAPI</div>
+          </div>
+          <p class="muted chico centro fragment">Bonus: como todo sale del mismo origen, no hace falta configurar CORS.</p>
+        </section>
+
+        <!-- ================= BLOQUE 7 · RENDER ================= -->
+        <section class="seccion" data-background-color="#BE1C1D" data-state="fondo-rojo" data-titulo="7 · Deploy en Render">
+          <div style="margin-top: 50px">
+            <div class="numero">7</div>
+            <h1>A producción</h1>
+            <div class="flujo" style="margin-top: 1em">
+              <div class="caja">git push</div><div class="flecha" style="color: #fff">→</div>
+              <div class="caja">Render clona el repo</div><div class="flecha" style="color: #fff">→</div>
+              <div class="caja">docker build</div><div class="flecha" style="color: #fff">→</div>
+              <div class="caja">docker run</div><div class="flecha" style="color: #fff">→</div>
+              <div class="caja">🌐 https://….onrender.com</div>
+            </div>
+            <p>Un <b>PaaS</b> (plataforma como servicio): le damos un Dockerfile y se encarga del servidor, HTTPS y dominio.</p>
+            <p class="chico">⚠️ Plan free: se duerme a los 15 min sin tráfico (la primera visita tarda ~1 min) · la base free vence a los 30 días.</p>
+          </div>
+        </section>
+
+        <section>
+          <h2 class="mano">Deploy del ejemplo 1</h2>
+          <ol class="chico">
+            <li>El código tiene que estar en <b>GitHub</b> (o GitLab / Bitbucket).</li>
+            <li class="fragment">Render → <b>New</b> → <b>Web Service</b> → conectar el repositorio.</li>
+            <li class="fragment"><b>Language</b>: <code>Docker</code> · <b>Root Directory</b>: <code>01-capitales-simple</code></li>
+            <li class="fragment"><b>Instance Type</b>: <code>Free</code></li>
+            <li class="fragment"><b>Environment</b>: <code>PORT = 80</code> → Render espera el 10000 por defecto; nuestro nginx escucha en el 80.</li>
+            <li class="fragment"><b>Deploy</b> y mirar los logs: <strong>son los mismos pasos de <code>docker build</code></strong>.</li>
+            <li class="fragment">Cambiar una capital → <code>git push</code> → redeploy automático. 🎉</li>
+          </ol>
+          <aside class="notes">Tener la cuenta de Render logueada antes de la clase y el repo ya conectado por si la red está lenta. Guía completa en docs/render.md.</aside>
+        </section>
+
+        <section data-sincronizar>
+          <h2>Bonus: infraestructura como código</h2>
+          <div class="anatomia">
+            <div>
+              <span class="archivo">render.yaml</span>
+              <pre class="chico"><code class="yaml" style="max-height: 440px" data-line-numbers="1-45|6-14|17-28|25-28|31-39|41-45" data-incluir="render.yaml"></code></pre>
+            </div>
+            <ul class="callouts">
+              <li data-step="1" data-n="1">El ejemplo 1, igual que lo hicimos a mano.</li>
+              <li data-step="2" data-n="2">La API: mismo Dockerfile que en Compose.</li>
+              <li data-step="3" data-n="3"><code>DATABASE_URL</code> la completa Render con la base que crea.</li>
+              <li data-step="4" data-n="4">El frontend: <code>API_URL</code> = URL pública de la API.</li>
+              <li data-step="5" data-n="5">La base PostgreSQL administrada. Los datos se cargan una vez con <code>psql … -f init.sql</code>.</li>
+            </ul>
+          </div>
+          <p class="muted chico">Render → New → <b>Blueprint</b> → elegir el repo. Pasos en <code>docs/render.md</code>.</p>
+        </section>
+
+        <!-- ================= BLOQUE 8 · CIERRE ================= -->
+        <section class="seccion" data-background-color="#BE1C1D" data-state="fondo-rojo" data-titulo="Cierre">
+          <div style="margin-top: 40px">
+            <h1>Lo que vimos</h1>
+            <div class="dos-col">
+              <ul>
+                <li>✔ El problema y qué resuelve Docker</li>
+                <li>✔ Contenedor vs. máquina virtual</li>
+                <li>✔ Imagen, contenedor, registry y comandos</li>
+                <li>✔ Dockerfile, capas, cache y multi-stage</li>
+                <li>✔ Redes, volúmenes y variables de entorno</li>
+                <li>✔ Compose para desarrollo y producción</li>
+                <li>✔ Deploy en un PaaS</li>
+              </ul>
+              <div>
+                <p><b>Para seguir:</b></p>
+                <ul class="chico">
+                  <li><code>docker compose watch</code></li>
+                  <li>Publicar imágenes en un registry (Docker Hub, GHCR)</li>
+                  <li>Escaneo de seguridad: <code>docker scout</code></li>
+                  <li>Orquestación: Kubernetes</li>
+                  <li>docs.docker.com</li>
+                </ul>
+                <h2 style="margin-top: 1em">¿Preguntas?</h2>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <footer class="pie">
+      <img src="assets/logo-untdf.svg" alt="UNTDF" />
+      <span class="seccion-actual"></span>
+    </footer>
+
+    <script src="vendor/reveal/reveal.js"></script>
+    <script src="vendor/reveal/plugin/highlight.js"></script>
+    <script src="vendor/reveal/plugin/notes.js"></script>
+    <script src="vendor/reveal/plugin/zoom.js"></script>
+    <script>
+      Reveal.initialize({
+        width: 1280,
+        height: 720,
+        margin: 0.05,
+        center: false,
+        hash: true,
+        slideNumber: 'c/t',
+        transition: 'slide',
+        plugins: [RevealHighlight, RevealNotes, RevealZoom],
+      })
+
+      // Callouts sincronizados con el paso actual del código o del comando
+      function sincronizar() {
+        const slide = Reveal.getCurrentSlide()
+        if (!slide || !slide.hasAttribute('data-sincronizar')) return
+
+        // a) Bloques de código con pasos (data-line-numbers="a|b|c")
+        slide.querySelectorAll('.anatomia').forEach((grupo) => {
+          const pre = grupo.querySelector('pre code[data-line-numbers]')?.parentElement
+          if (!pre) return
+          const paso = pre.querySelectorAll('code.fragment.visible').length
+          grupo.querySelectorAll('.callouts li[data-step]').forEach((li) => {
+            const n = Number(li.dataset.step)
+            li.classList.toggle('activo', n === paso)
+            li.classList.toggle('visto', n < paso)
+          })
+        })
+
+        // b) Comandos desarmados: cada callout fragment marca su parte del comando
+        const marcas = [...slide.querySelectorAll('.callouts li[data-marca]')]
+        if (marcas.length) {
+          const visibles = marcas.filter((li) => li.classList.contains('visible'))
+          const actual = visibles.at(-1)
+          marcas.forEach((li) => {
+            li.classList.toggle('activo', li === actual)
+            li.classList.toggle('visto', li !== actual && visibles.includes(li))
+          })
+          slide.querySelectorAll('.comando .p').forEach((p) => {
+            p.classList.toggle('activo', actual?.dataset.marca === p.dataset.id)
+          })
+        }
+      }
+
+      // Nombre de la sección actual en el pie
+      function actualizarPie() {
+        const actual = Reveal.getIndices().h
+        let titulo = ''
+        document.querySelectorAll('.reveal .slides > section').forEach((s, i) => {
+          if (i <= actual && s.dataset.titulo) titulo = s.dataset.titulo
+        })
+        document.querySelector('.pie .seccion-actual').textContent = 'Introducción a Docker · ' + titulo
+      }
+
+      ;['ready', 'slidechanged', 'fragmentshown', 'fragmenthidden'].forEach((evento) =>
+        Reveal.on(evento, () => {
+          sincronizar()
+          actualizarPie()
+        }),
+      )
+    </script>
+  </body>
+</html>
