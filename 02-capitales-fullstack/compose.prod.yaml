@@ -1,0 +1,56 @@
+# Modo PRODUCCIÓN
+#   cp .env.example .env      (y cambiá la contraseña)
+#   docker compose -f compose.prod.yaml up --build -d
+# Imágenes inmutables, sin código montado, solo el frontend expuesto al exterior.
+name: capitales-prod
+
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?Falta POSTGRES_USER en .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Falta POSTGRES_PASSWORD en .env}
+      POSTGRES_DB: ${POSTGRES_DB:?Falta POSTGRES_DB en .env}
+    volumes:
+      - pgdata:/var/lib/postgresql
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    # Sin "ports": la base solo es accesible desde la red interna de Compose
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ./backend
+      target: runtime          # etapa de producción: fastapi run, sin recarga
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+    # Sin "ports": al backend se llega únicamente a través de nginx (/api)
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    depends_on:
+      db:
+        condition: service_healthy   # espera a que Postgres acepte conexiones
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./frontend
+      target: runtime          # nginx con los estáticos ya compilados
+    environment:
+      API_URL: http://api:8000
+    ports:
+      - "8080:80"              # único puerto publicado
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pgdata:

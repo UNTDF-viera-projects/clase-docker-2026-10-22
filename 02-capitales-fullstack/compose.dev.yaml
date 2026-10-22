@@ -1,0 +1,47 @@
+# Modo DESARROLLO
+#   docker compose -f compose.dev.yaml up --build
+# El código se monta desde tu máquina: al guardar un archivo, la app se recarga sola.
+name: capitales-dev
+
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: capitales
+      POSTGRES_PASSWORD: capitales
+      POSTGRES_DB: capitales
+    ports:
+      - "5432:5432"            # expuesto para conectarse con DBeaver/psql desde el host
+    volumes:
+      - pgdata:/var/lib/postgresql                                # volumen con nombre: los datos persisten
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro    # bind mount: script de carga inicial
+
+  api:
+    build:
+      context: ./backend
+      target: dev              # etapa "dev" del Dockerfile: fastapi dev con recarga
+    environment:
+      DATABASE_URL: postgresql://capitales:capitales@db:5432/capitales   # "db" = nombre del servicio
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/app:/app/app # bind mount del código: los cambios se ven al instante
+    depends_on:
+      - db
+
+  web:
+    build:
+      context: ./frontend
+      target: dev              # etapa "dev": servidor de Vite
+    environment:
+      API_PROXY_TARGET: http://api:8000   # Vite reenvía /api/* a este destino
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app        # bind mount del código
+      - /app/node_modules      # volumen anónimo: conserva los node_modules de Linux de la imagen
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
