@@ -1,0 +1,19 @@
+# La imagen oficial de nginx reemplaza ${VARIABLES} de este template al arrancar
+# y lo guarda como /etc/nginx/conf.d/default.conf
+server {
+    listen ${PORT};
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # /api/... se reenvía al backend sin el prefijo /api
+    location /api/ {
+        proxy_pass ${API_URL}/;
+        proxy_ssl_server_name on;
+    }
+
+    # Cualquier otra ruta la resuelve React
+    location / {
+        try_files $uri /index.html;
+    }
+}
