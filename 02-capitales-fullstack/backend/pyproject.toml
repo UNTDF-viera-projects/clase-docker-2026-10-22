@@ -1,0 +1,9 @@
+[project]
+name = "capitales-api"
+version = "1.0.0"
+description = "API de capitales de Argentina para la clase de Docker"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi[standard]>=0.160.0",
+    "psycopg[binary]>=3.3.6",
+]

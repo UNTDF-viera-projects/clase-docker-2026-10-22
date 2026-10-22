@@ -17,7 +17,7 @@ Storyboard aprobado en `storyboard.md` (38 slides). Commits locales en `main` (r
 ## Tasks
 
 - [x] T1 S1,S4,S8 — 01-capitales-simple (app + Dockerfile v1/v2 + .dockerignore) — inline — commit: (ver git log, "feat(simple)")
-- [ ] T2 S2,S4,S8 — 02 db/init.sql + backend FastAPI/uv + Dockerfile — inline — commit:
+- [x] T2 S2,S4,S8 — 02 db/init.sql + backend FastAPI/uv + Dockerfile — inline — commit: "feat(fullstack): add Postgres seed and FastAPI"
 - [ ] T3 S3,S4,S8 — 02 frontend React/pnpm + Dockerfile + nginx — inline — commit:
 - [ ] T4 S5 — compose.dev.yaml + compose.prod.yaml + README con comandos manuales — inline — commit:
 - [ ] T5 S6 — render.yaml + guía de deploy — inline — commit:
