@@ -18,9 +18,9 @@ Storyboard aprobado en `storyboard.md` (38 slides). Commits locales en `main` (r
 
 - [x] T1 S1,S4,S8 — 01-capitales-simple (app + Dockerfile v1/v2 + .dockerignore) — inline — commit: (ver git log, "feat(simple)")
 - [x] T2 S2,S4,S8 — 02 db/init.sql + backend FastAPI/uv + Dockerfile — inline — commit: "feat(fullstack): add Postgres seed and FastAPI"
-- [ ] T3 S3,S4,S8 — 02 frontend React/pnpm + Dockerfile + nginx — inline — commit:
-- [ ] T4 S5 — compose.dev.yaml + compose.prod.yaml + README con comandos manuales — inline — commit:
-- [ ] T5 S6 — render.yaml + guía de deploy — inline — commit:
+- [x] T3 S3,S4,S8 — 02 frontend React/pnpm + Dockerfile + nginx — inline — commit: "feat(fullstack): add React frontend"
+- [x] T4 S5 — compose.dev.yaml + compose.prod.yaml + README con comandos manuales — inline — commit: "feat(fullstack): add dev and prod compose"
+- [x] T5 S6 — render.yaml + guía de deploy — inline — commit: "feat(deploy): add Render blueprint"
 - [ ] T6 S7 — slides reveal.js — inline — commit:
 - [ ] T7 S1-S8 — verificación end-to-end (pnpm, uv, docker run, compose dev/prod) — inline
 
@@ -29,3 +29,5 @@ Storyboard aprobado en `storyboard.md` (38 slides). Commits locales en `main` (r
 - L1 (pedido original, resumen del primer mensaje del usuario; texto completo en la sesión): clase introductoria de Docker para Analista/Lic. en Sistemas UNTDF; FastAPI + PostgreSQL (tabla capitales, /capitales paginado de 5, búsqueda por nombre); frontend React+Vite con tabla paginada e input de filtrado vía API; levantables con pnpm y uv; Docker y Docker Compose para dev y prod; deploy a Render (mínimo el frontend); carpeta aislada React Vite con ul>li hardcodeado y CSS mínimo; presentación PPTX o HTML (qué es Docker, por qué, problemas, vs VM, comandos básicos, Dockerfile del ejemplo simple, comandos individuales hasta compose con producción, deploy en Render); estilo con colores UNTDF; storyboard primero.
 - L2 Decisiones: 2 horas; compose en dos archivos explícitos; Render ejemplo 1 + Blueprint bonus; comentarios en español.
 - L3 Usuario: "me parece bien continuemos" — storyboard aprobado.
+- L4 Usuario: "si quieres ir guardando tu progreso puedes usar iniciar un repo y pushear a https://github.com/UNTDF-viera-projects/clase-docker-2026-10-22.git" — remoto configurado por SSH (HTTPS sin credenciales).
+- L5 Evidencia: imágenes simple v1/v2 278 MB, v3 63 MB; api 347 MB; prod web 63 MB. Puerto 8080 local ocupado por otro proyecto del usuario (sib-api-web-1): verificación prod con override 18080. Fix: ORDER BY unaccent(nombre).

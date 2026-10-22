@@ -1,0 +1,45 @@
+# Blueprint de Render: infraestructura como código.
+# Render > New > Blueprint > elegir este repo. Crea todo lo que está acá.
+
+services:
+  # Ejemplo 1: el frontend simple (nginx con estáticos). Es el que hacemos en vivo.
+  - type: web
+    name: capitales-simple
+    runtime: docker
+    plan: free
+    dockerfilePath: ./01-capitales-simple/Dockerfile
+    dockerContext: ./01-capitales-simple
+    envVars:
+      - key: PORT
+        value: "80"            # nginx escucha en el 80; Render por defecto espera el 10000
+
+  # Ejemplo 2 (bonus): API FastAPI
+  - type: web
+    name: capitales-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./02-capitales-fullstack/backend/Dockerfile
+    dockerContext: ./02-capitales-fullstack/backend
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: capitales-db
+          property: connectionString
+
+  # Ejemplo 2 (bonus): frontend con nginx que hace de proxy de /api
+  - type: web
+    name: capitales-web
+    runtime: docker
+    plan: free
+    dockerfilePath: ./02-capitales-fullstack/frontend/Dockerfile
+    dockerContext: ./02-capitales-fullstack/frontend
+    envVars:
+      - key: API_URL
+        sync: false            # Render la pide al crear el Blueprint: URL pública de capitales-api
+
+databases:
+  - name: capitales-db
+    plan: free                 # ojo: la base free vence a los 30 días
+    databaseName: capitales
+    user: capitales
