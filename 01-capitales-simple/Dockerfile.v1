@@ -1,0 +1,15 @@
+# v1: la versión más ingenua (funciona, pero desaprovecha la cache)
+FROM node:24-alpine
+
+WORKDIR /app
+
+# Copiamos TODO el proyecto de una vez
+COPY . .
+
+# Habilitamos pnpm e instalamos dependencias
+RUN corepack enable && pnpm install --frozen-lockfile
+
+EXPOSE 5173
+
+# --host hace que Vite escuche en 0.0.0.0 y no solo en localhost del contenedor
+CMD ["pnpm", "dev", "--host"]

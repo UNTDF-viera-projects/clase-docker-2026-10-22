@@ -1,0 +1,19 @@
+# v2: mismo resultado que v1, pero ordenado para aprovechar la cache de capas
+FROM node:24-alpine
+
+WORKDIR /app
+
+RUN corepack enable
+
+# 1) Primero solo los manifiestos: esta capa cambia poco
+COPY package.json pnpm-lock.yaml ./
+
+# 2) Instalar dependencias: se reutiliza de la cache si los manifiestos no cambiaron
+RUN pnpm install --frozen-lockfile
+
+# 3) Recién ahora el código fuente: cambia seguido
+COPY . .
+
+EXPOSE 5173
+
+CMD ["pnpm", "dev", "--host"]
